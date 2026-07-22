@@ -1,7 +1,9 @@
 // ---------- настройки (держите в синхроне с client_bot.py) ----------
 const DELIVERY_PRICE_PER_WEEK = 500;
 const PICKUP_PRICE_PER_WEEK = 250;
-const PICKUP_ADDRESS = "уточняется"; // впишите реальный адрес самовывоза
+const PICKUP_ADDRESS = "Москва, м. Тушинская";
+const PICKUP_NOTE_EXTRA =
+  "Требует дополнительного согласования даты и точного времени. Контакты для обсуждения: Мария, тел. 8 977 868 55 19 (Telegram, Max), email: sazhentsy.msk@mail.ru";
 const CATALOG_URL = "catalog.json";
 
 // ---------- telegram webapp init ----------
@@ -202,10 +204,36 @@ function renderGrid() {
     const bottom = body.querySelector(".card-bottom");
     const inCart = cart[item.a];
     if (inCart) {
-      const badge = document.createElement("span");
-      badge.className = "card-qty-badge";
-      badge.textContent = `${inCart} шт`;
-      bottom.appendChild(badge);
+      const stepper = document.createElement("div");
+      stepper.className = "card-qty-stepper";
+
+      const minusBtn = document.createElement("button");
+      minusBtn.textContent = "−";
+      minusBtn.onclick = (e) => {
+        e.stopPropagation();
+        const newQty = (cart[item.a] || 0) - 1;
+        if (newQty <= 0) delete cart[item.a];
+        else cart[item.a] = newQty;
+        renderGrid();
+        updateCartBar();
+      };
+
+      const qtySpan = document.createElement("span");
+      qtySpan.textContent = inCart;
+
+      const plusBtn = document.createElement("button");
+      plusBtn.textContent = "+";
+      plusBtn.onclick = (e) => {
+        e.stopPropagation();
+        cart[item.a] = (cart[item.a] || 0) + 1;
+        renderGrid();
+        updateCartBar();
+      };
+
+      stepper.appendChild(minusBtn);
+      stepper.appendChild(qtySpan);
+      stepper.appendChild(plusBtn);
+      bottom.appendChild(stepper);
     } else {
       const addBtn = document.createElement("button");
       addBtn.className = "card-add";
@@ -287,14 +315,18 @@ function updateCartBar() {
   const bar = document.getElementById("cart-bar");
   const count = cartCount();
   const screenName = screenStack[screenStack.length - 1];
-  if (count === 0 || screenName !== "catalog") {
+  if (screenName !== "catalog") {
     bar.hidden = true;
     return;
   }
-  const totals = computeTotals(deliveryMethod);
   bar.hidden = false;
   document.getElementById("cart-bar-count").textContent = `Корзина: ${count} шт`;
-  document.getElementById("cart-bar-total").textContent = `${fmtMoney(totals.itemsTotal)} ₽`;
+  if (count > 0) {
+    const totals = computeTotals(deliveryMethod);
+    document.getElementById("cart-bar-total").textContent = `${fmtMoney(totals.itemsTotal)} ₽`;
+  } else {
+    document.getElementById("cart-bar-total").textContent = "";
+  }
   bar.onclick = () => {
     screenStack = ["catalog", "cart"];
     renderCartScreen();
@@ -364,7 +396,8 @@ function renderCartScreen() {
 function updateDeliveryFieldsVisibility() {
   const isPickup = deliveryMethod === "pickup";
   document.getElementById("pickup-address-note").hidden = !isPickup;
-  document.getElementById("pickup-address-note").textContent = "Адрес самовывоза: " + PICKUP_ADDRESS;
+  document.getElementById("pickup-address-note").textContent =
+    "Адрес самовывоза: " + PICKUP_ADDRESS + ". " + PICKUP_NOTE_EXTRA;
   document.getElementById("delivery-address-fields").hidden = isPickup;
 }
 
@@ -396,13 +429,47 @@ function renderCheckoutSummary() {
   `;
 }
 
+// маска телефона: приводит ввод к формату +7 (999) 123-45-67
+function formatPhoneInput(e) {
+  let digits = e.target.value.replace(/\D/g, "");
+  if (digits.startsWith("8")) digits = "7" + digits.slice(1);
+  if (!digits.startsWith("7")) digits = "7" + digits;
+  digits = digits.slice(0, 11);
+
+  let formatted = "+7";
+  if (digits.length > 1) formatted += " (" + digits.slice(1, 4);
+  if (digits.length >= 4) formatted += ") " + digits.slice(4, 7);
+  if (digits.length >= 7) formatted += "-" + digits.slice(7, 9);
+  if (digits.length >= 9) formatted += "-" + digits.slice(9, 11);
+  e.target.value = formatted;
+}
+document.getElementById("phone-input").addEventListener("input", formatPhoneInput);
+document.getElementById("phone-input").addEventListener("focus", (e) => {
+  if (!e.target.value) e.target.value = "+7 ";
+});
+
+// ФИО: разрешаем только буквы, пробелы и дефис
+document.getElementById("name-input").addEventListener("input", (e) => {
+  e.target.value = e.target.value.replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "");
+});
+
 function submitOrder() {
   const name = document.getElementById("name-input").value.trim();
   const phone = document.getElementById("phone-input").value.trim();
+  const comment = document.getElementById("comment-input").value.trim();
   const errEl = document.getElementById("checkout-error");
 
-  if (!name || !phone) {
-    errEl.textContent = "Заполните ФИО и телефон.";
+  const phoneDigits = phone.replace(/\D/g, "");
+  const nameParts = name.split(/\s+/).filter(Boolean);
+
+  if (nameParts.length < 2) {
+    errEl.textContent = "Укажите ФИО полностью (фамилия и имя).";
+    errEl.hidden = false;
+    if (tg) tg.HapticFeedback.notificationOccurred("error");
+    return;
+  }
+  if (phoneDigits.length !== 11) {
+    errEl.textContent = "Укажите телефон полностью, в формате +7 (999) 123-45-67.";
     errEl.hidden = false;
     if (tg) tg.HapticFeedback.notificationOccurred("error");
     return;
@@ -439,6 +506,7 @@ function submitOrder() {
     delivery_address: deliveryAddress,
     customer_name: name,
     phone,
+    comment,
   };
 
   if (tg) {
