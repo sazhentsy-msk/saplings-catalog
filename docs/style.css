@@ -27,6 +27,29 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
 
 .search-wrap { margin-bottom: 10px; }
 
+.sort-select {
+  display: block;
+  width: 100%;
+  padding: 10px 34px 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background-color: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  outline: none;
+}
+.sort-select:focus { border-color: var(--accent); }
+.sort-select option { background: var(--card-bg); color: var(--text); }
+
 #search-input, .field-group input, .field-group textarea {
   width: 100%;
   padding: 10px 12px;
