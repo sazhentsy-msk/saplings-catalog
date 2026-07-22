@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Каталог</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="screen-catalog" class="screen">
+    <div class="topbar">
+      <div class="search-wrap">
+        <input id="search-input" type="text" placeholder="Найти сорт" autocomplete="off" />
+      </div>
+      <div id="category-tabs" class="category-tabs"></div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="empty-state" class="empty-state" hidden>Ничего не найдено. Попробуйте другой запрос.</div>
+  </div>
+
+  <div id="screen-item" class="screen" hidden>
+    <button class="back-btn" data-back="catalog">&larr; Назад</button>
+    <div id="item-detail"></div>
+  </div>
+
+  <div id="screen-cart" class="screen" hidden>
+    <button class="back-btn" data-back="catalog">&larr; Продолжить покупки</button>
+    <h2>Корзина</h2>
+    <div id="cart-list"></div>
+    <div id="cart-empty" class="empty-state" hidden>Корзина пуста.</div>
+    <div id="cart-summary" class="summary"></div>
+  </div>
+
+  <div id="screen-checkout" class="screen" hidden>
+    <button class="back-btn" data-back="cart">&larr; Назад в корзину</button>
+    <h2>Оформление заказа</h2>
+
+    <div class="field-group">
+      <label>Способ получения</label>
+      <div class="toggle-group" id="delivery-toggle">
+        <button type="button" class="toggle-btn active" data-method="delivery">Доставка</button>
+        <button type="button" class="toggle-btn" data-method="pickup">Самовывоз</button>
+      </div>
+      <div id="pickup-address-note" class="note" hidden></div>
+    </div>
+
+    <div class="field-group">
+      <label for="name-input">ФИО получателя</label>
+      <input id="name-input" type="text" placeholder="Иванова Мария" autocomplete="name" />
+    </div>
+
+    <div class="field-group">
+      <label for="phone-input">Телефон</label>
+      <input id="phone-input" type="tel" placeholder="89991234567" autocomplete="tel" />
+    </div>
+
+    <div id="checkout-summary" class="summary"></div>
+    <div id="checkout-error" class="error-text" hidden></div>
+  </div>
+
+  <div id="cart-bar" class="cart-bar" hidden>
+    <span id="cart-bar-count"></span>
+    <span id="cart-bar-total"></span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
