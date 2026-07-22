@@ -14,6 +14,12 @@
       <div class="search-wrap">
         <input id="search-input" type="text" placeholder="Найти сорт" autocomplete="off" />
       </div>
+      <select id="sort-select" class="sort-select">
+        <option value="default">Сортировка: по умолчанию</option>
+        <option value="price_asc">Цена: сначала дешевле</option>
+        <option value="price_desc">Цена: сначала дороже</option>
+        <option value="week_asc">Неделя поставки: сначала ближе</option>
+      </select>
       <div id="category-tabs" class="category-tabs"></div>
     </div>
 
@@ -90,11 +96,13 @@
     <div id="checkout-summary" class="summary"></div>
     <div id="checkout-error" class="error-text" hidden></div>
 
-    <div class="note payment-note">
-      Оплата переводом:<br />
-      Телефон: 8 977 669-75-35<br />
-      Банк: ВТБ<br />
-      Получатель: Филиппова Ксения Александровна<br /><br />
+    <div class="summary payment-summary">
+      <div class="summary-row"><span>Оплата</span><span>переводом по номеру телефона</span></div>
+      <div class="summary-row"><span>Телефон</span><span>8 977 669-75-35</span></div>
+      <div class="summary-row"><span>Банк</span><span>ВТБ</span></div>
+      <div class="summary-row"><span>Получатель</span><span>Филиппова Ксения Александровна</span></div>
+    </div>
+    <div class="note payment-hint">
       После оплаты нажмите кнопку «✅ Я оплатил(а)» в чате бота — это поможет нам оперативно проверить и подтвердить оплату.
     </div>
 

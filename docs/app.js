@@ -20,6 +20,7 @@ let ARTICLE_TO_ITEM = {};
 let cart = {}; // { article: qty }
 let activeCategory = "__all__";
 let searchQuery = "";
+let sortMode = "default"; // "default" | "price_asc" | "price_desc" | "week_asc"
 let currentItemArticle = null;
 let deliveryMethod = null; // "delivery" | "pickup" | null — пока не выбрано, доставка не считается
 let screenStack = ["catalog"];
@@ -155,13 +156,31 @@ function renderCategories() {
   });
 }
 
+function sortItems(items) {
+  if (sortMode === "price_asc") {
+    return [...items].sort((a, b) => unitPrice(a) - unitPrice(b));
+  }
+  if (sortMode === "price_desc") {
+    return [...items].sort((a, b) => unitPrice(b) - unitPrice(a));
+  }
+  if (sortMode === "week_asc") {
+    return [...items].sort((a, b) => {
+      const aw = a.w ?? Infinity; // товары без недели — в конец списка
+      const bw = b.w ?? Infinity;
+      return aw - bw;
+    });
+  }
+  return items;
+}
+
 function filteredItems() {
   const q = searchQuery.trim().toLowerCase();
-  return CATALOG.filter((item) => {
+  const filtered = CATALOG.filter((item) => {
     const matchesCategory = activeCategory === "__all__" || item.c === activeCategory;
     const matchesSearch = !q || item.v.toLowerCase().includes(q);
     return matchesCategory && matchesSearch;
   });
+  return sortItems(filtered);
 }
 
 function renderGrid() {
@@ -533,6 +552,12 @@ function submitOrder() {
 // ---------- search ----------
 document.getElementById("search-input").addEventListener("input", (e) => {
   searchQuery = e.target.value;
+  renderGrid();
+});
+
+// ---------- sort ----------
+document.getElementById("sort-select").addEventListener("change", (e) => {
+  sortMode = e.target.value;
   renderGrid();
 });
 
