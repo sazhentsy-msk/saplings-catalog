@@ -27,7 +27,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
 
 .search-wrap { margin-bottom: 10px; }
 
-#search-input, .field-group input {
+#search-input, .field-group input, .field-group textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -35,7 +35,9 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   background: var(--card-bg);
   color: var(--text);
   font-size: 15px;
+  font-family: inherit;
 }
+.field-group textarea { resize: vertical; }
 
 .category-tabs {
   display: flex;
@@ -114,6 +116,26 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   color: var(--accent);
   min-width: 26px;
   text-align: center;
+}
+.card-qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-qty-stepper button {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 14px;
+  line-height: 1;
+}
+.card-qty-stepper span {
+  min-width: 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .empty-state { text-align: center; color: var(--hint); padding: 40px 12px; font-size: 14px; }
