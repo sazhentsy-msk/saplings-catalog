@@ -227,6 +227,10 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
 .field-group { margin-bottom: 16px; }
 .field-group label { display: block; font-size: 13px; color: var(--hint); margin-bottom: 6px; }
 
+.field-row { display: flex; gap: 8px; }
+.field-row .field-group { flex: 1; }
+.field-narrow input { text-align: center; }
+
 .toggle-group { display: flex; gap: 8px; }
 .toggle-btn {
   flex: 1;
@@ -244,6 +248,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
 }
 
 .note { font-size: 12px; color: var(--hint); margin-top: 8px; }
+.contact-note { line-height: 1.5; margin-top: 16px; }
 .error-text { color: #c0392b; font-size: 13px; margin-top: 10px; }
 
 .cart-bar {
