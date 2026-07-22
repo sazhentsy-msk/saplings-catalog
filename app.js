@@ -361,13 +361,19 @@ function renderCartScreen() {
 }
 
 // ---------- checkout screen ----------
+function updateDeliveryFieldsVisibility() {
+  const isPickup = deliveryMethod === "pickup";
+  document.getElementById("pickup-address-note").hidden = !isPickup;
+  document.getElementById("pickup-address-note").textContent = "Адрес самовывоза: " + PICKUP_ADDRESS;
+  document.getElementById("delivery-address-fields").hidden = isPickup;
+}
+
 function openCheckout() {
   if (cartCount() === 0) return;
   document.querySelectorAll(".toggle-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.method === deliveryMethod);
   });
-  document.getElementById("pickup-address-note").hidden = deliveryMethod !== "pickup";
-  document.getElementById("pickup-address-note").textContent = "Адрес самовывоза: " + PICKUP_ADDRESS;
+  updateDeliveryFieldsVisibility();
   renderCheckoutSummary();
   pushScreen("checkout");
 }
@@ -376,8 +382,7 @@ document.querySelectorAll(".toggle-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     deliveryMethod = btn.dataset.method;
     document.querySelectorAll(".toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
-    document.getElementById("pickup-address-note").hidden = deliveryMethod !== "pickup";
-    document.getElementById("pickup-address-note").textContent = "Адрес самовывоза: " + PICKUP_ADDRESS;
+    updateDeliveryFieldsVisibility();
     renderCheckoutSummary();
   });
 });
@@ -402,12 +407,36 @@ function submitOrder() {
     if (tg) tg.HapticFeedback.notificationOccurred("error");
     return;
   }
+
+  let deliveryAddress = null;
+  if (deliveryMethod === "delivery") {
+    const city = document.getElementById("addr-city").value.trim();
+    const street = document.getElementById("addr-street").value.trim();
+    const house = document.getElementById("addr-house").value.trim();
+    const building = document.getElementById("addr-building").value.trim();
+    const apartment = document.getElementById("addr-apartment").value.trim();
+
+    if (!city || !street || !house) {
+      errEl.textContent = "Укажите город, улицу и дом для доставки.";
+      errEl.hidden = false;
+      if (tg) tg.HapticFeedback.notificationOccurred("error");
+      return;
+    }
+
+    let formatted = `г. ${city}, ул. ${street}, д. ${house}`;
+    if (building) formatted += `, корп./стр. ${building}`;
+    if (apartment) formatted += `, кв. ${apartment}`;
+
+    deliveryAddress = { city, street, house, building, apartment, formatted };
+  }
+
   errEl.hidden = true;
 
   const items = Object.keys(cart).map((a) => ({ a: Number(a), qty: cart[a] }));
   const payload = {
     items,
     delivery_method: deliveryMethod,
+    delivery_address: deliveryAddress,
     customer_name: name,
     phone,
   };
