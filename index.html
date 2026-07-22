@@ -51,6 +51,10 @@
         <button type="button" class="toggle-btn" data-method="pickup">Самовывоз</button>
       </div>
       <div id="pickup-address-note" class="note" hidden></div>
+      <div id="delivery-method-note" class="note" hidden>
+        Доставка осуществляется только до пункта выдачи СДЭК (ПВЗ). Укажите город и адрес ближайшего
+        удобного вам ПВЗ — подбор и интеграция с СДЭК будут добавлены позже.
+      </div>
 
       <div id="delivery-address-fields">
         <div class="field-group">
@@ -58,22 +62,8 @@
           <input id="addr-city" type="text" placeholder="Москва" autocomplete="address-level2" />
         </div>
         <div class="field-group">
-          <label for="addr-street">Улица</label>
-          <input id="addr-street" type="text" placeholder="Ленина" autocomplete="address-line1" />
-        </div>
-        <div class="field-row">
-          <div class="field-group field-narrow">
-            <label for="addr-house">Дом</label>
-            <input id="addr-house" type="text" placeholder="5" autocomplete="off" />
-          </div>
-          <div class="field-group field-narrow">
-            <label for="addr-building">Корпус/стр.</label>
-            <input id="addr-building" type="text" placeholder="2" autocomplete="off" />
-          </div>
-          <div class="field-group field-narrow">
-            <label for="addr-apartment">Квартира</label>
-            <input id="addr-apartment" type="text" placeholder="10" autocomplete="off" />
-          </div>
+          <label for="addr-pvz">Адрес ПВЗ СДЭК</label>
+          <input id="addr-pvz" type="text" placeholder="ул. Ленина, 5 (ближайший ПВЗ СДЭК)" autocomplete="off" />
         </div>
       </div>
     </div>

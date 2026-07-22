@@ -421,6 +421,7 @@ function updateDeliveryFieldsVisibility() {
   document.getElementById("pickup-address-note").hidden = !isPickup;
   document.getElementById("pickup-address-note").textContent =
     "Адрес самовывоза: " + PICKUP_ADDRESS + ". " + PICKUP_NOTE_EXTRA;
+  document.getElementById("delivery-method-note").hidden = !isDelivery;
   document.getElementById("delivery-address-fields").hidden = !isDelivery;
 }
 
@@ -508,23 +509,17 @@ function submitOrder() {
   let deliveryAddress = null;
   if (deliveryMethod === "delivery") {
     const city = document.getElementById("addr-city").value.trim();
-    const street = document.getElementById("addr-street").value.trim();
-    const house = document.getElementById("addr-house").value.trim();
-    const building = document.getElementById("addr-building").value.trim();
-    const apartment = document.getElementById("addr-apartment").value.trim();
+    const pvz = document.getElementById("addr-pvz").value.trim();
 
-    if (!city || !street || !house) {
-      errEl.textContent = "Укажите город, улицу и дом для доставки.";
+    if (!city || !pvz) {
+      errEl.textContent = "Укажите город и адрес ближайшего ПВЗ СДЭК для доставки.";
       errEl.hidden = false;
       if (tg) tg.HapticFeedback.notificationOccurred("error");
       return;
     }
 
-    let formatted = `г. ${city}, ул. ${street}, д. ${house}`;
-    if (building) formatted += `, корп./стр. ${building}`;
-    if (apartment) formatted += `, кв. ${apartment}`;
-
-    deliveryAddress = { city, street, house, building, apartment, formatted };
+    const formatted = `г. ${city}, ПВЗ СДЭК: ${pvz}`;
+    deliveryAddress = { city, pvz, formatted };
   }
 
   errEl.hidden = true;
