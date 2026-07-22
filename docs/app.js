@@ -3,7 +3,7 @@ const DELIVERY_PRICE_PER_WEEK = 500;
 const PICKUP_PRICE_PER_WEEK = 250;
 const PICKUP_ADDRESS = "Москва, м. Тушинская";
 const PICKUP_NOTE_EXTRA =
-  "Требует дополнительного согласования даты и точного времени. Контакты для обсуждения: Мария, тел. 8 977 868 55 19 (Telegram, Max), email: sazhentsy.msk@mail.ru";
+  "Требует дополнительного согласования даты и точного времени. Контакты для обсуждения: Мария, тел. +7 (977) 868-55-19 (Telegram, Max), email: sazhentsy.msk@mail.ru";
 const CATALOG_URL = "catalog.json";
 
 // ---------- telegram webapp init ----------
@@ -21,7 +21,7 @@ let cart = {}; // { article: qty }
 let activeCategory = "__all__";
 let searchQuery = "";
 let currentItemArticle = null;
-let deliveryMethod = "delivery";
+let deliveryMethod = null; // "delivery" | "pickup" | null — пока не выбрано, доставка не считается
 let screenStack = ["catalog"];
 
 // ---------- helpers ----------
@@ -49,8 +49,11 @@ function computeTotals(method) {
     if (item.w) weeks.add(item.w);
     lines.push({ item, qty, lineTotal });
   }
-  const pricePerWeek = method === "pickup" ? PICKUP_PRICE_PER_WEEK : DELIVERY_PRICE_PER_WEEK;
-  const deliveryTotal = weeks.size * pricePerWeek;
+  let deliveryTotal = 0;
+  if (method) {
+    const pricePerWeek = method === "pickup" ? PICKUP_PRICE_PER_WEEK : DELIVERY_PRICE_PER_WEEK;
+    deliveryTotal = weeks.size * pricePerWeek;
+  }
   return { lines, itemsTotal, deliveryTotal, grandTotal: itemsTotal + deliveryTotal };
 }
 
@@ -386,8 +389,8 @@ function renderCartScreen() {
 
   summaryEl.innerHTML = `
     <div class="summary-row"><span>Товары</span><span>${fmtMoney(totals.itemsTotal)} ₽</span></div>
-    <div class="summary-row"><span>${deliveryMethod === "pickup" ? "Самовывоз" : "Доставка"}</span><span>${fmtMoney(totals.deliveryTotal)} ₽</span></div>
-    <div class="summary-row total"><span>Итого</span><span>${fmtMoney(totals.grandTotal)} ₽</span></div>
+    <div class="summary-row"><span>${deliveryMethod === "pickup" ? "Самовывоз" : deliveryMethod === "delivery" ? "Доставка" : "Доставка/самовывоз"}</span><span>${deliveryMethod ? fmtMoney(totals.deliveryTotal) + " ₽" : "уточняется"}</span></div>
+    <div class="summary-row total"><span>Итого</span><span>${fmtMoney(totals.grandTotal)} ₽${deliveryMethod ? "" : " + доставка"}</span></div>
   `;
   updateTelegramButtons("cart");
 }
@@ -395,10 +398,11 @@ function renderCartScreen() {
 // ---------- checkout screen ----------
 function updateDeliveryFieldsVisibility() {
   const isPickup = deliveryMethod === "pickup";
+  const isDelivery = deliveryMethod === "delivery";
   document.getElementById("pickup-address-note").hidden = !isPickup;
   document.getElementById("pickup-address-note").textContent =
     "Адрес самовывоза: " + PICKUP_ADDRESS + ". " + PICKUP_NOTE_EXTRA;
-  document.getElementById("delivery-address-fields").hidden = isPickup;
+  document.getElementById("delivery-address-fields").hidden = !isDelivery;
 }
 
 function openCheckout() {
@@ -424,8 +428,8 @@ function renderCheckoutSummary() {
   const totals = computeTotals(deliveryMethod);
   document.getElementById("checkout-summary").innerHTML = `
     <div class="summary-row"><span>Товары</span><span>${fmtMoney(totals.itemsTotal)} ₽</span></div>
-    <div class="summary-row"><span>${deliveryMethod === "pickup" ? "Самовывоз" : "Доставка"}</span><span>${fmtMoney(totals.deliveryTotal)} ₽</span></div>
-    <div class="summary-row total"><span>Итого</span><span>${fmtMoney(totals.grandTotal)} ₽</span></div>
+    <div class="summary-row"><span>${deliveryMethod === "pickup" ? "Самовывоз" : deliveryMethod === "delivery" ? "Доставка" : "Доставка/самовывоз"}</span><span>${deliveryMethod ? fmtMoney(totals.deliveryTotal) + " ₽" : "уточняется"}</span></div>
+    <div class="summary-row total"><span>Итого</span><span>${fmtMoney(totals.grandTotal)} ₽${deliveryMethod ? "" : " + доставка"}</span></div>
   `;
 }
 
@@ -458,6 +462,13 @@ function submitOrder() {
   const phone = document.getElementById("phone-input").value.trim();
   const comment = document.getElementById("comment-input").value.trim();
   const errEl = document.getElementById("checkout-error");
+
+  if (!deliveryMethod) {
+    errEl.textContent = "Выберите способ получения заказа.";
+    errEl.hidden = false;
+    if (tg) tg.HapticFeedback.notificationOccurred("error");
+    return;
+  }
 
   const phoneDigits = phone.replace(/\D/g, "");
   const nameParts = name.split(/\s+/).filter(Boolean);
