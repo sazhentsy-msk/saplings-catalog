@@ -36,6 +36,29 @@ function weekLabel(item) {
   return item.w ? `неделя ${item.w}` : "неделя уточняется";
 }
 
+// Умная обработка фото: перебирает заглавные и строчные буквы (.JPG, .jpg, .PNG, .png и т.д.)
+function handleImgError(img, article) {
+  const src = img.src;
+
+  if (src.endsWith('.jpg')) {
+    img.src = `photos/${article}.JPG`;
+  } else if (src.endsWith('.JPG')) {
+    img.src = `photos/${article}.png`;
+  } else if (src.endsWith('.png')) {
+    img.src = `photos/${article}.PNG`;
+  } else if (src.endsWith('.PNG')) {
+    img.src = `photos/${article}.jpeg`;
+  } else if (src.endsWith('.jpeg')) {
+    img.src = `photos/${article}.JPEG`;
+  } else if (src.endsWith('.JPEG')) {
+    img.src = `photos/${article}.webp`;
+  } else if (src.endsWith('.webp')) {
+    img.src = `photos/${article}.WEBP`;
+  } else {
+    img.replaceWith(placeholderEl());
+  }
+}
+
 function computeTotals(method) {
   const lines = [];
   let itemsTotal = 0;
@@ -131,7 +154,7 @@ function onMainButtonClick() {
 
 // ---------- catalog rendering ----------
 let categoryObserver = null;
-let suppressObserverUntil = 0; // timestamp; игнорируем срабатывания observer во время программного скролла
+let suppressObserverUntil = 0;
 
 function renderCategories() {
   const wrap = document.getElementById("category-tabs");
@@ -153,7 +176,6 @@ function renderCategories() {
   });
 }
 
-// подсвечивает нужную пилюлю без перестройки списка товаров
 function setActivePill(cat) {
   activeCategory = cat;
   document.querySelectorAll("#category-tabs .cat-pill").forEach((p) => {
@@ -161,10 +183,9 @@ function setActivePill(cat) {
   });
 }
 
-// скроллит каталог к нужной категории (или к самому верху для "Все")
 function scrollToCategory(cat) {
   const grid = document.getElementById("grid");
-  suppressObserverUntil = Date.now() + 700; // на время smooth-скролла не даём observer'у сбивать пилюлю
+  suppressObserverUntil = Date.now() + 700;
   if (cat === "__all__") {
     setActivePill("__all__");
     grid.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -190,7 +211,7 @@ function sortItems(items) {
   }
   if (sortMode === "week_asc") {
     return [...items].sort((a, b) => {
-      const aw = a.w ?? Infinity; // товары без недели — в конец списка
+      const aw = a.w ?? Infinity;
       const bw = b.w ?? Infinity;
       return aw - bw;
     });
@@ -198,7 +219,6 @@ function sortItems(items) {
   return items;
 }
 
-// товары одной категории с учётом поиска и сортировки (для одной секции списка)
 function itemsForCategory(cat) {
   const q = searchQuery.trim().toLowerCase();
   const filtered = CATALOG.filter((item) => {
@@ -209,7 +229,6 @@ function itemsForCategory(cat) {
   return sortItems(filtered);
 }
 
-// единый сплошной список: секции по категориям одна за другой, порядок — как в CATEGORIES
 function renderGrid() {
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty-state");
@@ -255,7 +274,6 @@ function renderGrid() {
   }
 }
 
-// подгоняет отступ для scrollIntoView под реальную высоту липкой шапки (поиск + сортировка + пилюли)
 function applyScrollOffset(grid) {
   const topbar = document.querySelector(".topbar");
   const offset = (topbar ? topbar.offsetHeight : 88) + 8;
@@ -265,7 +283,6 @@ function applyScrollOffset(grid) {
   });
 }
 
-// следит, какая секция сейчас вверху экрана, и переключает активную пилюлю
 function setupCategoryObserver(cats) {
   const grid = document.getElementById("grid");
   categoryObserver = new IntersectionObserver(
@@ -296,9 +313,7 @@ function buildCard(item) {
   img.className = "card-img";
   img.src = imgSrc;
   img.alt = item.v;
-  img.onerror = () => {
-    img.replaceWith(placeholderEl());
-  };
+  img.onerror = () => handleImgError(img, item.a);
   imgWrap.appendChild(img);
   card.appendChild(imgWrap);
 
@@ -382,7 +397,7 @@ function openItem(article) {
   const existingQty = cart[article] || 1;
 
   const imgSrc = item.img || `photos/${item.a}.jpg`;
-  const imgHtml = `<img class="item-img" src="${imgSrc}" alt="${escapeHtml(item.v)}" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'item-img-placeholder', textContent:'фото'}))" />`;
+  const imgHtml = `<img class="item-img" src="${imgSrc}" alt="${escapeHtml(item.v)}" onerror="handleImgError(this, ${item.a})" />`;
 
   detail.innerHTML = `
     ${imgHtml}
@@ -462,7 +477,7 @@ function renderCartScreen() {
     const row = document.createElement("div");
     row.className = "cart-row";
     const imgSrc = item.img || `photos/${item.a}.jpg`;
-    const imgHtml = `<img class="cart-row-img" src="${imgSrc}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'cart-row-img'}))" />`;
+    const imgHtml = `<img class="cart-row-img" src="${imgSrc}" alt="" onerror="handleImgError(this, ${item.a})" />`;
     row.innerHTML = `
       ${imgHtml}
       <div class="cart-row-info">
