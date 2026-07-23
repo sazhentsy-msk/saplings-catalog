@@ -64,12 +64,10 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
 
 .category-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
   padding-bottom: 2px;
-  -webkit-overflow-scrolling: touch;
 }
-.category-tabs::-webkit-scrollbar { display: none; }
 
 .cat-pill {
   white-space: nowrap;
