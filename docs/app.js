@@ -130,30 +130,55 @@ function onMainButtonClick() {
 }
 
 // ---------- catalog rendering ----------
+let categoryObserver = null;
+let suppressObserverUntil = 0; // timestamp; игнорируем срабатывания observer во время программного скролла
+
 function renderCategories() {
   const wrap = document.getElementById("category-tabs");
   wrap.innerHTML = "";
   const all = document.createElement("button");
   all.className = "cat-pill" + (activeCategory === "__all__" ? " active" : "");
+  all.dataset.cat = "__all__";
   all.textContent = "Все";
-  all.onclick = () => {
-    activeCategory = "__all__";
-    renderCategories();
-    renderGrid();
-  };
+  all.onclick = () => scrollToCategory("__all__");
   wrap.appendChild(all);
 
   CATEGORIES.forEach((cat) => {
     const pill = document.createElement("button");
     pill.className = "cat-pill" + (activeCategory === cat ? " active" : "");
+    pill.dataset.cat = cat;
     pill.textContent = cat;
-    pill.onclick = () => {
-      activeCategory = cat;
-      renderCategories();
-      renderGrid();
-    };
+    pill.onclick = () => scrollToCategory(cat);
     wrap.appendChild(pill);
   });
+}
+
+// подсвечивает нужную пилюлю без перестройки списка товаров
+function setActivePill(cat) {
+  activeCategory = cat;
+  document.querySelectorAll("#category-tabs .cat-pill").forEach((p) => {
+    p.classList.toggle("active", p.dataset.cat === cat);
+  });
+}
+
+// скроллит каталог к нужной категории (или к самому верху для "Все")
+function scrollToCategory(cat) {
+  const grid = document.getElementById("grid");
+  suppressObserverUntil = Date.now() + 700; // на время smooth-скролла не даём observer'у сбивать пилюлю
+  if (cat === "__all__") {
+    setActivePill("__all__");
+    grid.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  const section = grid.querySelector(`.catalog-section[data-cat="${cssEscape(cat)}"]`);
+  if (section) {
+    setActivePill(cat);
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function cssEscape(str) {
+  return window.CSS && CSS.escape ? CSS.escape(str) : str.replace(/["\\]/g, "\\$&");
 }
 
 function sortItems(items) {
@@ -173,105 +198,173 @@ function sortItems(items) {
   return items;
 }
 
-function filteredItems() {
+// товары одной категории с учётом поиска и сортировки (для одной секции списка)
+function itemsForCategory(cat) {
   const q = searchQuery.trim().toLowerCase();
   const filtered = CATALOG.filter((item) => {
-    const matchesCategory = activeCategory === "__all__" || item.c === activeCategory;
+    const matchesCategory = item.c === cat;
     const matchesSearch = !q || item.v.toLowerCase().includes(q);
     return matchesCategory && matchesSearch;
   });
   return sortItems(filtered);
 }
 
+// единый сплошной список: секции по категориям одна за другой, порядок — как в CATEGORIES
 function renderGrid() {
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty-state");
-  const items = filteredItems();
+  if (categoryObserver) {
+    categoryObserver.disconnect();
+    categoryObserver = null;
+  }
   grid.innerHTML = "";
 
-  if (items.length === 0) {
+  const sections = CATEGORIES.map((cat) => ({ cat, items: itemsForCategory(cat) })).filter(
+    (s) => s.items.length > 0
+  );
+
+  if (sections.length === 0) {
     empty.hidden = false;
     return;
   }
   empty.hidden = true;
 
-  items.forEach((item) => {
-    const card = document.createElement("div");
-    card.className = "card";
+  sections.forEach(({ cat, items }) => {
+    const section = document.createElement("div");
+    section.className = "catalog-section";
+    section.dataset.cat = cat;
 
-    const imgWrap = document.createElement("div");
-    if (item.img) {
-      const img = document.createElement("img");
-      img.className = "card-img";
-      img.src = item.img;
-      img.alt = item.v;
-      img.onerror = () => {
-        img.replaceWith(placeholderEl());
-      };
-      imgWrap.appendChild(img);
-    } else {
-      imgWrap.appendChild(placeholderEl());
-    }
-    card.appendChild(imgWrap);
+    const header = document.createElement("div");
+    header.className = "catalog-section-header";
+    header.textContent = cat;
+    section.appendChild(header);
 
-    const body = document.createElement("div");
-    body.className = "card-body";
-    body.innerHTML = `
-      <div class="card-name">${escapeHtml(item.v)}</div>
-      <div class="card-week">${weekLabel(item)}</div>
-      <div class="card-bottom">
-        <span class="card-price">${fmtMoney(unitPrice(item))} ₽</span>
-      </div>
-    `;
-    const bottom = body.querySelector(".card-bottom");
-    const inCart = cart[item.a];
-    if (inCart) {
-      const stepper = document.createElement("div");
-      stepper.className = "card-qty-stepper";
+    const cardsWrap = document.createElement("div");
+    cardsWrap.className = "catalog-section-cards";
+    items.forEach((item) => cardsWrap.appendChild(buildCard(item)));
+    section.appendChild(cardsWrap);
 
-      const minusBtn = document.createElement("button");
-      minusBtn.textContent = "−";
-      minusBtn.onclick = (e) => {
-        e.stopPropagation();
-        const newQty = (cart[item.a] || 0) - 1;
-        if (newQty <= 0) delete cart[item.a];
-        else cart[item.a] = newQty;
-        renderGrid();
-        updateCartBar();
-      };
-
-      const qtySpan = document.createElement("span");
-      qtySpan.textContent = inCart;
-
-      const plusBtn = document.createElement("button");
-      plusBtn.textContent = "+";
-      plusBtn.onclick = (e) => {
-        e.stopPropagation();
-        cart[item.a] = (cart[item.a] || 0) + 1;
-        renderGrid();
-        updateCartBar();
-      };
-
-      stepper.appendChild(minusBtn);
-      stepper.appendChild(qtySpan);
-      stepper.appendChild(plusBtn);
-      bottom.appendChild(stepper);
-    } else {
-      const addBtn = document.createElement("button");
-      addBtn.className = "card-add";
-      addBtn.textContent = "+";
-      addBtn.onclick = (e) => {
-        e.stopPropagation();
-        cart[item.a] = (cart[item.a] || 0) + 1;
-        renderGrid();
-        updateCartBar();
-      };
-      bottom.appendChild(addBtn);
-    }
-    card.appendChild(body);
-    card.onclick = () => openItem(item.a);
-    grid.appendChild(card);
+    grid.appendChild(section);
   });
+
+  applyScrollOffset(grid);
+  setupCategoryObserver(sections.map((s) => s.cat));
+
+  // по умолчанию (первая отрисовка/поиск) подсвечиваем первую реально видимую категорию,
+  // а не "Все" — она не выбирается автоматически, только вручную по клику
+  if (!sections.some((s) => s.cat === activeCategory)) {
+    setActivePill(sections[0].cat);
+  }
+}
+
+// подгоняет отступ для scrollIntoView под реальную высоту липкой шапки (поиск + сортировка + пилюли)
+function applyScrollOffset(grid) {
+  const topbar = document.querySelector(".topbar");
+  const offset = (topbar ? topbar.offsetHeight : 88) + 8;
+  grid.style.scrollMarginTop = offset + "px";
+  grid.querySelectorAll(".catalog-section").forEach((s) => {
+    s.style.scrollMarginTop = offset + "px";
+  });
+}
+
+// следит, какая секция сейчас вверху экрана, и переключает активную пилюлю
+function setupCategoryObserver(cats) {
+  const grid = document.getElementById("grid");
+  categoryObserver = new IntersectionObserver(
+    (entries) => {
+      if (Date.now() < suppressObserverUntil) return;
+      // среди пересекающих верхнюю полосу секций берём самую верхнюю
+      const visible = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length > 0) {
+        setActivePill(visible[0].target.dataset.cat);
+      }
+    },
+    { root: null, rootMargin: "-10% 0px -75% 0px", threshold: 0 }
+  );
+  cats.forEach((cat) => {
+    const section = grid.querySelector(`.catalog-section[data-cat="${cssEscape(cat)}"]`);
+    if (section) categoryObserver.observe(section);
+  });
+}
+
+function buildCard(item) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const imgWrap = document.createElement("div");
+  if (item.img) {
+    const img = document.createElement("img");
+    img.className = "card-img";
+    img.src = item.img;
+    img.alt = item.v;
+    img.onerror = () => {
+      img.replaceWith(placeholderEl());
+    };
+    imgWrap.appendChild(img);
+  } else {
+    imgWrap.appendChild(placeholderEl());
+  }
+  card.appendChild(imgWrap);
+
+  const body = document.createElement("div");
+  body.className = "card-body";
+  body.innerHTML = `
+    <div class="card-name">${escapeHtml(item.v)}</div>
+    <div class="card-week">${weekLabel(item)}</div>
+    <div class="card-bottom">
+      <span class="card-price">${fmtMoney(unitPrice(item))} ₽</span>
+    </div>
+  `;
+  const bottom = body.querySelector(".card-bottom");
+  const inCart = cart[item.a];
+  if (inCart) {
+    const stepper = document.createElement("div");
+    stepper.className = "card-qty-stepper";
+
+    const minusBtn = document.createElement("button");
+    minusBtn.textContent = "−";
+    minusBtn.onclick = (e) => {
+      e.stopPropagation();
+      const newQty = (cart[item.a] || 0) - 1;
+      if (newQty <= 0) delete cart[item.a];
+      else cart[item.a] = newQty;
+      renderGrid();
+      updateCartBar();
+    };
+
+    const qtySpan = document.createElement("span");
+    qtySpan.textContent = inCart;
+
+    const plusBtn = document.createElement("button");
+    plusBtn.textContent = "+";
+    plusBtn.onclick = (e) => {
+      e.stopPropagation();
+      cart[item.a] = (cart[item.a] || 0) + 1;
+      renderGrid();
+      updateCartBar();
+    };
+
+    stepper.appendChild(minusBtn);
+    stepper.appendChild(qtySpan);
+    stepper.appendChild(plusBtn);
+    bottom.appendChild(stepper);
+  } else {
+    const addBtn = document.createElement("button");
+    addBtn.className = "card-add";
+    addBtn.textContent = "+";
+    addBtn.onclick = (e) => {
+      e.stopPropagation();
+      cart[item.a] = (cart[item.a] || 0) + 1;
+      renderGrid();
+      updateCartBar();
+    };
+    bottom.appendChild(addBtn);
+  }
+  card.appendChild(body);
+  card.onclick = () => openItem(item.a);
+  return card;
 }
 
 function placeholderEl() {
@@ -386,7 +479,7 @@ function renderCartScreen() {
       </div>
       <div class="cart-row-controls">
         <button class="cart-row-minus">−</button>
-        <span>${qty}</span>
+        <input type="number" class="cart-row-qty-input" inputmode="numeric" min="1" step="1" value="${qty}" />
         <button class="cart-row-plus">+</button>
         <button class="cart-row-remove">×</button>
       </div>
@@ -403,15 +496,53 @@ function renderCartScreen() {
       delete cart[item.a];
       renderCartScreen();
     };
+
+    const qtyInput = row.querySelector(".cart-row-qty-input");
+    // применяем значение (без полной перерисовки, чтобы не сбивать фокус во время ввода)
+    const applyQtyInput = () => {
+      let val = Math.floor(Number(qtyInput.value));
+      if (!Number.isFinite(val) || val < 1) val = 1;
+      cart[item.a] = val;
+      qtyInput.value = val;
+      updateCartLineDisplay(row, item, val);
+      updateCartBar();
+      updateCartSummary();
+    };
+    // подтверждаем при потере фокуса или Enter
+    qtyInput.addEventListener("change", applyQtyInput);
+    qtyInput.addEventListener("blur", applyQtyInput);
+    qtyInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        qtyInput.blur();
+      }
+    });
+
     list.appendChild(row);
   });
 
+  updateCartSummary();
+  updateTelegramButtons("cart");
+}
+
+// обновляет цену и сумму строки в корзине без перерисовки всего списка (сохраняет фокус на инпуте кол-ва)
+function updateCartLineDisplay(row, item, qty) {
+  const priceEl = row.querySelector(".cart-row-price");
+  const lineTotal = unitPrice(item) * qty;
+  if (priceEl) {
+    priceEl.textContent = `${qty} шт × ${fmtMoney(unitPrice(item))} ₽ = ${fmtMoney(lineTotal)} ₽`;
+  }
+}
+
+// пересчитывает и отрисовывает блок итогов корзины
+function updateCartSummary() {
+  const summaryEl = document.getElementById("cart-summary");
+  if (!summaryEl) return;
+  const totals = computeTotals(deliveryMethod);
   summaryEl.innerHTML = `
     <div class="summary-row"><span>Товары</span><span>${fmtMoney(totals.itemsTotal)} ₽</span></div>
     <div class="summary-row"><span>${deliveryMethod === "pickup" ? "Самовывоз" : deliveryMethod === "delivery" ? "Доставка" : "Доставка/самовывоз"}</span><span>${deliveryMethod ? fmtMoney(totals.deliveryTotal) + " ₽" : "уточняется"}</span></div>
     <div class="summary-row total"><span>Итого</span><span>${fmtMoney(totals.grandTotal)} ₽${deliveryMethod ? "" : " + доставка"}</span></div>
   `;
-  updateTelegramButtons("cart");
 }
 
 // ---------- checkout screen ----------
