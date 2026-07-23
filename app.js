@@ -291,13 +291,13 @@ function buildCard(item) {
   card.className = "card";
 
   const imgWrap = document.createElement("div");
-  const imgSrc = item.img || `photos/${item.a}.jpg?v=2`;
+  const imgSrc = item.img || `photos/${item.id}.jpg?v=2`;
   const img = document.createElement("img");
   img.className = "card-img";
   img.loading = "lazy"; // Быстрая ленивая загрузка
   img.src = imgSrc;
   img.alt = item.v;
-  img.onerror = () => handleImgError(img, item.a);
+  img.onerror = () => handleImgError(img, item.id);
   imgWrap.appendChild(img);
   card.appendChild(imgWrap);
 
@@ -380,8 +380,8 @@ function openItem(article) {
   const detail = document.getElementById("item-detail");
   const existingQty = cart[article] || 1;
 
-  const imgSrc = item.img || `photos/${item.a}.jpg?v=2`;
-  const imgHtml = `<img class="item-img" src="${imgSrc}" alt="${escapeHtml(item.v)}" onerror="handleImgError(this, ${item.a})" />`;
+  const imgSrc = item.img || `photos/${item.id}.jpg?v=2`;
+  const imgHtml = `<img class="item-img" src="${imgSrc}" alt="${escapeHtml(item.v)}" onerror="handleImgError(this, ${item.id})" />`;
 
   detail.innerHTML = `
     ${imgHtml}
@@ -460,8 +460,8 @@ function renderCartScreen() {
   totals.lines.forEach(({ item, qty, lineTotal }) => {
     const row = document.createElement("div");
     row.className = "cart-row";
-    const imgSrc = item.img || `photos/${item.a}.jpg?v=2`;
-    const imgHtml = `<img class="cart-row-img" src="${imgSrc}" alt="" onerror="handleImgError(this, ${item.a})" />`;
+    const imgSrc = item.img || `photos/${item.id}.jpg?v=2`;
+    const imgHtml = `<img class="cart-row-img" src="${imgSrc}" alt="" onerror="handleImgError(this, ${item.id})" />`;
     row.innerHTML = `
       ${imgHtml}
       <div class="cart-row-info">
