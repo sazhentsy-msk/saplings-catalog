@@ -1,18 +1,24 @@
 * { box-sizing: border-box; }
 
 :root {
-  /* Принудительно задаём белый фон для всех блоков независимо от темы Telegram */
-  --bg: #ffffff;
-  --secondary-bg: #f5f5f7;
-  --card-bg: #ffffff;
-  
-  /* Текст остаётся тёмным для читаемости на белом */
-  --text: #1a1a1a;
-  --hint: #767676;
-  
-  --accent: #2e7d4f;
+  /* Палитра: сиреневый фон + зелёный чай — акценты */
+  --bg: #F6F1FB;              /* очень светлый сиреневый — подложка под body по умолчанию */
+  --secondary-bg: #BFA2DB;    /* основной фон каталога/экранов — сиреневый */
+  --card-bg: #ffffff;         /* карточки, инпуты, окна с текстом — белые, для контраста и фото */
+  --placeholder-bg: #F1E8FA;  /* светлый сиреневый — заглушка фото (отличается от белой карточки) */
+
+  /* Текст — не чёрный, а тёмно-сливовый, мягче на сиреневом фоне */
+  --text: #332145;
+  --hint: #6B587E;
+
+  --accent: #456020;          /* глубокий "зелёный чай" — кнопки с белым текстом, хороший контраст */
   --accent-text: #ffffff;
-  --border: rgba(0, 0, 0, 0.08);
+  --accent-soft: #E0FFB4;     /* исходный светлый зелёный чай — выбранная категория, бейджи */
+  --accent-soft-text: #3D5719;/* тёмно-зелёный текст поверх светло-зелёного */
+
+  --border: rgba(51, 33, 69, 0.14);       /* сиреневая полупрозрачная обводка вместо серой */
+  --pill-bg: rgba(255, 255, 255, 0.55);   /* невыбранные пилюли — полупрозрачно-белые */
+  --pill-border: rgba(255, 255, 255, 0.8);
 }
 
 body {
@@ -27,7 +33,15 @@ body {
 
 h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
 
-.topbar { position: sticky; top: 0; background: var(--secondary-bg); z-index: 5; padding-bottom: 8px; }
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(191, 162, 219, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5;
+  padding-bottom: 8px;
+}
 
 .search-wrap { margin-bottom: 10px; }
 
@@ -88,14 +102,15 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
+  border: 1px solid var(--pill-border);
+  background: var(--pill-bg);
   color: var(--text);
 }
 .cat-pill.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 600;
 }
 
 .grid {
@@ -126,6 +141,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   border-radius: 12px;
   overflow: hidden;
   text-align: left;
+  box-shadow: 0 2px 8px rgba(51, 33, 69, 0.10);
 }
 
 .card-img-placeholder {
@@ -134,7 +150,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--secondary-bg);
+  background: var(--placeholder-bg);
   color: var(--hint);
   font-size: 12px;
 }
@@ -196,7 +212,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   height: 220px;
   border-radius: 12px;
   margin-bottom: 12px;
-  background: var(--secondary-bg);
+  background: var(--placeholder-bg);
   display: flex;
   align-items: center;
   justify-content: center;
