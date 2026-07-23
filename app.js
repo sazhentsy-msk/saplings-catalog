@@ -36,15 +36,24 @@ function weekLabel(item) {
   return item.w ? `неделя ${item.w}` : "неделя уточняется";
 }
 
-// Обработка ошибок загрузки фото: пробует .jpg -> .png -> .jpeg -> .webp -> заглушка
+// Умная обработка фото: перебирает заглавные и строчные буквы (.JPG, .jpg, .PNG, .png и т.д.)
 function handleImgError(img, article) {
-  const currentSrc = img.src.toLowerCase();
-  if (currentSrc.endsWith('.jpg')) {
+  const src = img.src;
+
+  if (src.endsWith('.jpg')) {
+    img.src = `photos/${article}.JPG`;
+  } else if (src.endsWith('.JPG')) {
     img.src = `photos/${article}.png`;
-  } else if (currentSrc.endsWith('.png')) {
+  } else if (src.endsWith('.png')) {
+    img.src = `photos/${article}.PNG`;
+  } else if (src.endsWith('.PNG')) {
     img.src = `photos/${article}.jpeg`;
-  } else if (currentSrc.endsWith('.jpeg')) {
+  } else if (src.endsWith('.jpeg')) {
+    img.src = `photos/${article}.JPEG`;
+  } else if (src.endsWith('.JPEG')) {
     img.src = `photos/${article}.webp`;
+  } else if (src.endsWith('.webp')) {
+    img.src = `photos/${article}.WEBP`;
   } else {
     img.replaceWith(placeholderEl());
   }
