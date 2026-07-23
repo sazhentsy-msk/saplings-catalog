@@ -17,8 +17,8 @@
   --accent-soft-text: #3D5719;/* тёмно-зелёный текст поверх светло-зелёного */
 
   --border: rgba(51, 33, 69, 0.14);       /* сиреневая полупрозрачная обводка вместо серой */
-  --pill-bg: rgba(255, 255, 255, 0.55);   /* невыбранные пилюли — полупрозрачно-белые */
-  --pill-border: rgba(255, 255, 255, 0.8);
+  --pill-bg: #ffffff;                     /* невыбранные пилюли — сплошной белый, как карточки */
+  --pill-border: rgba(255, 255, 255, 0.9);
 }
 
 body {
@@ -105,6 +105,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   border: 1px solid var(--pill-border);
   background: var(--pill-bg);
   color: var(--text);
+  box-shadow: 0 1px 4px rgba(51, 33, 69, 0.14);
 }
 .cat-pill.active {
   background: var(--accent-soft);
@@ -168,6 +169,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   border-radius: 8px;
   font-size: 16px;
   line-height: 1;
+  box-shadow: 0 1px 4px rgba(51, 33, 69, 0.3);
 }
 .card-qty-badge {
   font-size: 12px;
@@ -189,6 +191,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   color: var(--accent-text);
   font-size: 14px;
   line-height: 1;
+  box-shadow: 0 1px 4px rgba(51, 33, 69, 0.3);
 }
 .card-qty-stepper span {
   min-width: 16px;
@@ -349,6 +352,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   font-size: 14px;
   font-weight: 600;
   z-index: 10;
+  box-shadow: 0 8px 24px rgba(51, 33, 69, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
 }
 
 /* Белый фон и единое вписывание для всех карточек и фото */
