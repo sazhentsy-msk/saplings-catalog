@@ -250,8 +250,6 @@ function renderGrid() {
   applyScrollOffset(grid);
   setupCategoryObserver(sections.map((s) => s.cat));
 
-  // по умолчанию (первая отрисовка/поиск) подсвечиваем первую реально видимую категорию,
-  // а не "Все" — она не выбирается автоматически, только вручную по клику
   if (!sections.some((s) => s.cat === activeCategory)) {
     setActivePill(sections[0].cat);
   }
@@ -273,7 +271,6 @@ function setupCategoryObserver(cats) {
   categoryObserver = new IntersectionObserver(
     (entries) => {
       if (Date.now() < suppressObserverUntil) return;
-      // среди пересекающих верхнюю полосу секций берём самую верхнюю
       const visible = entries
         .filter((e) => e.isIntersecting)
         .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -294,18 +291,15 @@ function buildCard(item) {
   card.className = "card";
 
   const imgWrap = document.createElement("div");
-  if (item.img) {
-    const img = document.createElement("img");
-    img.className = "card-img";
-    img.src = item.img;
-    img.alt = item.v;
-    img.onerror = () => {
-      img.replaceWith(placeholderEl());
-    };
-    imgWrap.appendChild(img);
-  } else {
-    imgWrap.appendChild(placeholderEl());
-  }
+  const imgSrc = item.img || `photos/${item.a}.jpg`;
+  const img = document.createElement("img");
+  img.className = "card-img";
+  img.src = imgSrc;
+  img.alt = item.v;
+  img.onerror = () => {
+    img.replaceWith(placeholderEl());
+  };
+  imgWrap.appendChild(img);
   card.appendChild(imgWrap);
 
   const body = document.createElement("div");
@@ -387,9 +381,8 @@ function openItem(article) {
   const detail = document.getElementById("item-detail");
   const existingQty = cart[article] || 1;
 
-  const imgHtml = item.img
-    ? `<img class="item-img" src="${item.img}" alt="${escapeHtml(item.v)}" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'item-img-placeholder', textContent:'фото'}))" />`
-    : `<div class="item-img-placeholder">фото</div>`;
+  const imgSrc = item.img || `photos/${item.a}.jpg`;
+  const imgHtml = `<img class="item-img" src="${imgSrc}" alt="${escapeHtml(item.v)}" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'item-img-placeholder', textContent:'фото'}))" />`;
 
   detail.innerHTML = `
     ${imgHtml}
@@ -468,9 +461,8 @@ function renderCartScreen() {
   totals.lines.forEach(({ item, qty, lineTotal }) => {
     const row = document.createElement("div");
     row.className = "cart-row";
-    const imgHtml = item.img
-      ? `<img class="cart-row-img" src="${item.img}" alt="" />`
-      : `<div class="cart-row-img"></div>`;
+    const imgSrc = item.img || `photos/${item.a}.jpg`;
+    const imgHtml = `<img class="cart-row-img" src="${imgSrc}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'), {className:'cart-row-img'}))" />`;
     row.innerHTML = `
       ${imgHtml}
       <div class="cart-row-info">
@@ -498,7 +490,6 @@ function renderCartScreen() {
     };
 
     const qtyInput = row.querySelector(".cart-row-qty-input");
-    // применяем значение (без полной перерисовки, чтобы не сбивать фокус во время ввода)
     const applyQtyInput = () => {
       let val = Math.floor(Number(qtyInput.value));
       if (!Number.isFinite(val) || val < 1) val = 1;
@@ -508,7 +499,6 @@ function renderCartScreen() {
       updateCartBar();
       updateCartSummary();
     };
-    // подтверждаем при потере фокуса или Enter
     qtyInput.addEventListener("change", applyQtyInput);
     qtyInput.addEventListener("blur", applyQtyInput);
     qtyInput.addEventListener("keydown", (e) => {
@@ -524,7 +514,6 @@ function renderCartScreen() {
   updateTelegramButtons("cart");
 }
 
-// обновляет цену и сумму строки в корзине без перерисовки всего списка (сохраняет фокус на инпуте кол-ва)
 function updateCartLineDisplay(row, item, qty) {
   const priceEl = row.querySelector(".cart-row-price");
   const lineTotal = unitPrice(item) * qty;
@@ -533,7 +522,6 @@ function updateCartLineDisplay(row, item, qty) {
   }
 }
 
-// пересчитывает и отрисовывает блок итогов корзины
 function updateCartSummary() {
   const summaryEl = document.getElementById("cart-summary");
   if (!summaryEl) return;
@@ -584,7 +572,6 @@ function renderCheckoutSummary() {
   `;
 }
 
-// маска телефона: приводит ввод к формату +7 (999) 123-45-67
 function formatPhoneInput(e) {
   let digits = e.target.value.replace(/\D/g, "");
   if (digits.startsWith("8")) digits = "7" + digits.slice(1);
@@ -603,7 +590,6 @@ document.getElementById("phone-input").addEventListener("focus", (e) => {
   if (!e.target.value) e.target.value = "+7 ";
 });
 
-// ФИО: разрешаем только буквы, пробелы и дефис
 document.getElementById("name-input").addEventListener("input", (e) => {
   e.target.value = e.target.value.replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "");
 });
@@ -668,9 +654,7 @@ function submitOrder() {
   if (tg) {
     tg.MainButton.showProgress();
     tg.sendData(JSON.stringify(payload));
-    // Telegram закроет Web App автоматически после sendData
   } else {
-    // локальный тест вне Telegram
     alert("Заказ отправлен (тестовый режим, не в Telegram):\n" + JSON.stringify(payload, null, 2));
   }
 }
