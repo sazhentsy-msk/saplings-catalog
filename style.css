@@ -84,6 +84,31 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   color: var(--accent-text);
 }
 
+.cat-toggle-btn { display: none; }
+
+@media (min-width: 700px) {
+  .category-tabs {
+    height: 32px;
+    overflow: hidden;
+  }
+  .cat-toggle-checkbox:checked ~ .category-tabs {
+    height: auto;
+    overflow: visible;
+  }
+
+  .cat-toggle-btn {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--accent);
+    cursor: pointer;
+    user-select: none;
+  }
+  .cat-toggle-btn .less-text { display: none; }
+  .cat-toggle-checkbox:checked ~ .cat-toggle-btn .more-text { display: none; }
+  .cat-toggle-checkbox:checked ~ .cat-toggle-btn .less-text { display: inline; }
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

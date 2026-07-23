@@ -20,7 +20,14 @@
         <option value="price_desc">Цена: сначала дороже</option>
         <option value="week_asc">Неделя поставки: сначала ближе</option>
       </select>
-      <div id="category-tabs" class="category-tabs"></div>
+      <div class="category-tabs-wrap">
+        <input type="checkbox" id="cat-toggle" class="cat-toggle-checkbox" hidden>
+        <div id="category-tabs" class="category-tabs"></div>
+        <label for="cat-toggle" class="cat-toggle-btn">
+          <span class="more-text">Ещё ▾</span>
+          <span class="less-text">Свернуть ▴</span>
+        </label>
+      </div>
     </div>
 
     <div id="grid" class="grid"></div>
