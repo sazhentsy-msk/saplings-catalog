@@ -352,7 +352,8 @@ h2 { font-size: 18px; font-weight: 600; margin: 8px 0 14px; }
   font-size: 14px;
   font-weight: 600;
   z-index: 10;
-  box-shadow: 0 8px 24px rgba(51, 33, 69, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 28px rgba(51, 33, 69, 0.5);
 }
 
 /* Белый фон и единое вписывание для всех карточек и фото */
