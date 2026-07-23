@@ -36,27 +36,10 @@ function weekLabel(item) {
   return item.w ? `неделя ${item.w}` : "неделя уточняется";
 }
 
-// Умная обработка фото: перебирает заглавные и строчные буквы (.JPG, .jpg, .PNG, .png и т.д.)
+// Обработка ошибок загрузки фото
 function handleImgError(img, article) {
-  const src = img.src;
-
-  if (src.endsWith('.jpg')) {
-    img.src = `photos/${article}.JPG`;
-  } else if (src.endsWith('.JPG')) {
-    img.src = `photos/${article}.png`;
-  } else if (src.endsWith('.png')) {
-    img.src = `photos/${article}.PNG`;
-  } else if (src.endsWith('.PNG')) {
-    img.src = `photos/${article}.jpeg`;
-  } else if (src.endsWith('.jpeg')) {
-    img.src = `photos/${article}.JPEG`;
-  } else if (src.endsWith('.JPEG')) {
-    img.src = `photos/${article}.webp`;
-  } else if (src.endsWith('.webp')) {
-    img.src = `photos/${article}.WEBP`;
-  } else {
-    img.replaceWith(placeholderEl());
-  }
+  img.onerror = null; // Предотвращаем бесконечный цикл
+  img.replaceWith(placeholderEl());
 }
 
 function computeTotals(method) {
@@ -308,9 +291,10 @@ function buildCard(item) {
   card.className = "card";
 
   const imgWrap = document.createElement("div");
-  const imgSrc = item.img || `photos/${item.a}.jpg`;
+  const imgSrc = item.img || `photos/${item.a}.jpg?v=2`;
   const img = document.createElement("img");
   img.className = "card-img";
+  img.loading = "lazy"; // Быстрая ленивая загрузка
   img.src = imgSrc;
   img.alt = item.v;
   img.onerror = () => handleImgError(img, item.a);
@@ -396,7 +380,7 @@ function openItem(article) {
   const detail = document.getElementById("item-detail");
   const existingQty = cart[article] || 1;
 
-  const imgSrc = item.img || `photos/${item.a}.jpg`;
+  const imgSrc = item.img || `photos/${item.a}.jpg?v=2`;
   const imgHtml = `<img class="item-img" src="${imgSrc}" alt="${escapeHtml(item.v)}" onerror="handleImgError(this, ${item.a})" />`;
 
   detail.innerHTML = `
@@ -476,7 +460,7 @@ function renderCartScreen() {
   totals.lines.forEach(({ item, qty, lineTotal }) => {
     const row = document.createElement("div");
     row.className = "cart-row";
-    const imgSrc = item.img || `photos/${item.a}.jpg`;
+    const imgSrc = item.img || `photos/${item.a}.jpg?v=2`;
     const imgHtml = `<img class="cart-row-img" src="${imgSrc}" alt="" onerror="handleImgError(this, ${item.a})" />`;
     row.innerHTML = `
       ${imgHtml}
